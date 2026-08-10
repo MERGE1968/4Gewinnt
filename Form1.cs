@@ -67,11 +67,11 @@ namespace Win4Gewinnt
         }
 
         private void BtnAnalysis_Click(object sender, EventArgs e)
-        {
+        { 
             if (rbRot.Checked)
                 Brett.Analysis(Brett.Farbe.Rot);                                    // Rot = 1
             else
-                 Brett.Analysis(Brett.Farbe.Gelb);                                   // Gelb = -1
+                Brett.Analysis(Brett.Farbe.Gelb);                                   // Gelb = -1
 
             MessageBox.Show("... FERTIG ...");
         }
