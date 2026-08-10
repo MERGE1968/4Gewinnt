@@ -1,0 +1,9 @@
+C:\Users\ergemu\source\repos\Win4Gewinnt\bin\x64\Release\Win4Gewinnt.exe.config
+C:\Users\ergemu\source\repos\Win4Gewinnt\bin\x64\Release\Win4Gewinnt.exe
+C:\Users\ergemu\source\repos\Win4Gewinnt\bin\x64\Release\Win4Gewinnt.pdb
+C:\Users\ergemu\source\repos\Win4Gewinnt\obj\x64\Release\Win4Gewinnt.Form1.resources
+C:\Users\ergemu\source\repos\Win4Gewinnt\obj\x64\Release\Win4Gewinnt.Properties.Resources.resources
+C:\Users\ergemu\source\repos\Win4Gewinnt\obj\x64\Release\Win4Gewinnt.csproj.GenerateResource.cache
+C:\Users\ergemu\source\repos\Win4Gewinnt\obj\x64\Release\Win4Gewinnt.csproj.CoreCompileInputs.cache
+C:\Users\ergemu\source\repos\Win4Gewinnt\obj\x64\Release\Win4Gewinnt.exe
+C:\Users\ergemu\source\repos\Win4Gewinnt\obj\x64\Release\Win4Gewinnt.pdb
