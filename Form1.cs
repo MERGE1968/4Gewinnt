@@ -58,7 +58,7 @@ namespace Win4Gewinnt
             catch (Exception)
             {
                 textBoxY.Focus();
-                MessageBox.Show("Zahl {Y}  fehlerhaft");
+                MessageBox.Show("Zahl {Y}  fehlerhaft"); 
                 return;
             }
 

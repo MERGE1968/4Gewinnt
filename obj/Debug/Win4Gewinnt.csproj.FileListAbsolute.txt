@@ -7,3 +7,12 @@ C:\Users\ergemu\source\repos\Win4Gewinnt\obj\Debug\Win4Gewinnt.csproj.GenerateRe
 C:\Users\ergemu\source\repos\Win4Gewinnt\obj\Debug\Win4Gewinnt.csproj.CoreCompileInputs.cache
 C:\Users\ergemu\source\repos\Win4Gewinnt\obj\Debug\Win4Gewinnt.exe
 C:\Users\ergemu\source\repos\Win4Gewinnt\obj\Debug\Win4Gewinnt.pdb
+C:\Users\ergemu\source\repos\4Gewinnt\bin\Debug\Win4Gewinnt.exe.config
+C:\Users\ergemu\source\repos\4Gewinnt\bin\Debug\Win4Gewinnt.exe
+C:\Users\ergemu\source\repos\4Gewinnt\bin\Debug\Win4Gewinnt.pdb
+C:\Users\ergemu\source\repos\4Gewinnt\obj\Debug\Win4Gewinnt.Form1.resources
+C:\Users\ergemu\source\repos\4Gewinnt\obj\Debug\Win4Gewinnt.Properties.Resources.resources
+C:\Users\ergemu\source\repos\4Gewinnt\obj\Debug\Win4Gewinnt.csproj.GenerateResource.cache
+C:\Users\ergemu\source\repos\4Gewinnt\obj\Debug\Win4Gewinnt.csproj.CoreCompileInputs.cache
+C:\Users\ergemu\source\repos\4Gewinnt\obj\Debug\Win4Gewinnt.exe
+C:\Users\ergemu\source\repos\4Gewinnt\obj\Debug\Win4Gewinnt.pdb
