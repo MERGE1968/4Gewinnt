@@ -55,7 +55,7 @@ namespace Win4Gewinnt
             {
                 valueY = Convert.ToInt32(textBoxY.Text);
             }
-            catch (Exception)
+            catch (Exception) 
             {
                 textBoxY.Focus();
                 MessageBox.Show("Zahl {Y}  fehlerhaft"); 
@@ -67,12 +67,15 @@ namespace Win4Gewinnt
         }
 
         private void BtnAnalysis_Click(object sender, EventArgs e)
-        { 
+        {
+            Brett.gewonnen = false;
+
             if (rbRot.Checked)
                 Brett.Analysis(Brett.Farbe.Rot);                                    // Rot = 1
             else
                 Brett.Analysis(Brett.Farbe.Gelb);                                   // Gelb = -1
 
+            int anzahl = Brett.step;
             MessageBox.Show("... FERTIG ...");
         }
 

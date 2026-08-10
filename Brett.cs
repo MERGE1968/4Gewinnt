@@ -24,6 +24,8 @@ namespace Win4Gewinnt
         //public static string path = @"C:\Temp\4Gewinnt\Stellung1.txt";
 
         public static Farbe Spieler;
+        public static int step = 0;
+        public static bool gewonnen = false;
 
 
         public static int GetValue(int pX, int pY)   
@@ -681,24 +683,28 @@ namespace Win4Gewinnt
         //------------------------------------------
         public static int Analysis(Farbe pSpieler)
         {
-            List<Zug> Zuege = new List<Zug>();
+            if (GetFreeField() == 0)
+                return -10;
+
+            if (step > 10000)
+                return -10;
 
             // Den ersten EIGENEN Stein auf dem Feld finden
-            int CountEigeneSteine = GetEigenenStein(pSpieler);
-
-            // Den ersten Stein vom GEGNERs auf dem Feld finden
-            Farbe gegner;
-            if (pSpieler == Farbe.Rot)                                      // Rot = 1
-                gegner = Farbe.Gelb;                                        // Gelb = -1
-            else
-                gegner = Farbe.Rot;
-
-            int CountGegnerSteine = GetGegnerStein(gegner);
+            int CountEigeneSteine = GetEigenenStein(pSpieler);            
             
 
             // Wenn kein Stein auf dem Feld liegt -> so nah wie möglich beim Gegner platzieren
             if (CountEigeneSteine == 0)
             {
+                // Den ersten Stein vom GEGNERs auf dem Feld finden
+                Farbe gegner;
+                if (pSpieler == Farbe.Rot)                                      // Rot = 1
+                    gegner = Farbe.Gelb;                                        // Gelb = -1
+                else
+                    gegner = Farbe.Rot;
+
+                int CountGegnerSteine = GetGegnerStein(gegner);
+
                 if (CountGegnerSteine == 0)
                 {
                     // Kein Stein vom Gegner vorhanden.
@@ -715,6 +721,8 @@ namespace Win4Gewinnt
                 return 0;
             }
 
+
+            List<Zug> Zuege = new List<Zug>();
 
 
             // Wir haben auf dem Feld Steine und suchen jetzt nach einem freien Feld.
@@ -799,182 +807,151 @@ namespace Win4Gewinnt
             }//for y
 
 
-
+            
+            int result;
+            string FileNameBrett = @"c:\temp\4Gewinnt\Analyse_BRETT.Txt";            
+            string FileNameZug = @"c:\temp\4Gewinnt\Analyse_ZUG.Txt";
+            
             if (pSpieler == Farbe.Rot)
             {
-                // Ergebnisse in einer Datei speichern
-                string FileName = @"c:\temp\4Gewinnt\Analyse_Move_ROT.Txt";
-                SaveMove(FileName, false, Zuege); ;
+                // Ergebnisse in einer Datei speichern                
+                //SaveMove(FileNameZugRot, false, Zuege); ;
 
                 foreach (Zug item in Zuege)
                 {
-                    // Waagerecht
-                    //if ((item.Links + item.Rechts) > 0)
+                    // Wenn eine Himmelsrichtung eine4 Reihe ergibt 
+                    if (((item.Links + item.Rechts) >= 3) ||
+                        (item.Runter >= 3) ||
+                        ((item.DiagLinksHoch + item.DiagRechtsRunter) >= 3) ||
+                        ((item.DiagLinksRunter + item.DiagRechtsHoch) >= 3))
                     {
-                        if ((item.Links + item.Rechts) == 3)
-                        {
-                            // Rot hat gewonen
-                            SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_ROT.Txt", false, item, "ROT hat mit dem Zug gewonnen");
-                            return -1;
-                        }
-
-                        // Zug ausführen und schauen, was er bringt
+                        // Rot hat gewonen
+                        gewonnen = true;
                         SetValue(item, Farbe.Rot);
-                        SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_ROT.Txt", false, item,"");
-
-
-                        int result = Analysis(Farbe.Gelb);                                 // Gelb = -1
-                        if (result < 0)
-                        {
-                            // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht
-                        }
-
-                        // Zug wieder entfernen
-                        RemoveValue(item, Farbe.Rot);
-                    }
-
-                    // Diagonal -> \
-                    //if ((item.DiagLinksHoch + item.DiagRechtsRunter) > 0)
-                    {
-                        if ((item.DiagLinksHoch + item.DiagRechtsRunter) == 3)
-                        {
-                            // Rot hat gewonen
-                            SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_ROT.Txt", false, item, "ROT hat mit dem Zug gewonnen");
-                            return -1;
-                        }
-
-                        // Zug ausführen und schauen, was er bringt
-                        SetValue(item, Farbe.Rot);
-                        SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_ROT.Txt", false, item,"");
-
-
-                        int result = Analysis(Farbe.Gelb);                                 // Gelb = -1
-                        if (result < 0)
-                        {
-                            // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht
-                        }
-
-                        // Zug wieder entfernen
-                        RemoveValue(item, Farbe.Rot);
+                        SaveBrett(FileNameBrett, false, item, "ROT hat mit dem Zug gewonnen");
+                        RemoveValue(item, Farbe.Rot);                                           // Zug wieder entfernen
+                        SaveMove(FileNameZug, false, Zuege);
+                        step++;
+                        return -10;                                                             // Irgendwie die Routine beenden
                     }
 
 
-                    // Diagonal -> /
-                    //if ((item.DiagRechtsRunter + item.DiagLinksHoch) > 0)
+                    // Zug ausführen und schauen, was er bringt
+                    SetValue(item, Farbe.Rot);
+                    //SaveBrett(FileNameBrett, false, item, "Zug ROT");
+                    result = Analysis(Farbe.Gelb);                                          // Gelb = -1
+                    RemoveValue(item, Farbe.Rot);                                           // Zug wieder entfernen                        
+
+                    if (gewonnen)
                     {
-                        if ((item.DiagRechtsRunter + item.DiagLinksHoch) == 3)
-                        {
-                            // Rot hat gewonen
-                            SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_ROT.Txt", false, item, "ROT hat mit dem Zug gewonnen");
-                            return -1;
-                        }
-
-                        // Zug ausführen und schauen, was er bringt
-                        SetValue(item, Farbe.Rot);
-                        SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_ROT.Txt", false, item,"");
-
-
-                        int result = Analysis(Farbe.Gelb);                                 // Gelb = -1
-                        if (result < 0)
-                        {
-                            // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht
-                        }
-
-                        // Zug wieder entfernen
-                        RemoveValue(item, Farbe.Rot);
+                        SaveBrett(FileNameBrett, false, item, "ROT  ");
+                        return -10;
                     }
+
+                    if (result > 0)
+                    {
+                        // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht                            
+                        continue;
+                    }
+
+                    // Kein freies Feld mehr vorhanden
+                    if (result == -1)
+                    {
+                        continue; 
+                    }
+
+                    // Tiefe ist erreicht -> Züge ausgeben
+                    if (result == -10)
+                    {
+                        SaveBrett(FileNameBrett, false, item, "ROT  ... Max. Tiefe ist erreicht ...");
+                        SaveMove(FileNameZug, false, Zuege);
+                        return result; 
+                    }
+
                 }//foreach
             }//if
+
+
+
 
 
             if (pSpieler == Farbe.Gelb)
             {
                 // Ergebnisse in einer Datei speichern
-                string FileName = @"c:\temp\4Gewinnt\Analyse_Move_GELB.txt";
-                SaveMove(FileName, false, Zuege);
+                //SaveMove(FileNameZugGelb, false, Zuege);
 
                 foreach (Zug item in Zuege)
                 {
-                    // Waagerecht
-                    //if ((item.Links + item.Rechts) > 0)
+                    // Wenn eine Himmelsrichtung eine4 Reihe ergibt 
+                    if (((item.Links + item.Rechts) >= 3) ||
+                        (item.Runter >= 3) ||
+                        ((item.DiagLinksHoch + item.DiagRechtsRunter) >= 3) ||
+                        ((item.DiagLinksRunter + item.DiagRechtsHoch) >= 3))
                     {
-                        if ((item.Links + item.Rechts) == 3)
-                        {
-                            // Gelb hat gewonen
-                            SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_GELB.Txt", false, item, "GELB hat mit dem Zug gewonnen");
-                            return -1;
-                        }
-
-                        // Zug ausführen und schauen, was er bringt
-                        SetValue(item, Farbe.Gelb);
-                        SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_GELB.Txt", false, item,"");
-
-                        int result = Analysis(Farbe.Rot);                                 // Gelb = -1
-                        if (result < 0)
-                        {
-                            // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht
-                        }
-
-                        // Zug wieder entfernen
-                        RemoveValue(item, Farbe.Gelb);
+                        // Gelb hat gewonen
+                        //SetValue(item, Farbe.Gelb);
+                        //SaveBrett(FileNameBrett, false, item, "GELB hat mit dem Zug gewonnen");
+                        //RemoveValue(item, Farbe.Gelb);                                          // Zug wieder entfernen
+                        //step++;
+                        return 1;
                     }
 
 
-                    // Diagonal -> \
-                    //if ((item.DiagLinksHoch + item.DiagRechtsRunter) > 0)
+                    // Zug ausführen und schauen, was er bringt
+                    SetValue(item, Farbe.Gelb);
+                    //SaveBrett(FileNameBrett, false, item, "Zug GELB");
+                    result = Analysis(Farbe.Rot);                                           // Gelb = -1
+                    RemoveValue(item, Farbe.Gelb);                                          // Zug wieder entfernen
+
+                    if (gewonnen)
                     {
-                        if ((item.DiagLinksHoch + item.DiagRechtsRunter) == 3)
-                        {
-                            // Rot hat gewonen
-                            SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_GELB.Txt", false, item, "GELB hat mit dem Zug gewonnen");
-                            return -1;
-                        }
+                        SaveBrett(FileNameBrett, false, item, "GELB  ");
+                        return -10;
+                    }
 
-                        // Zug ausführen und schauen, was er bringt
-                        SetValue(item, Farbe.Gelb);
-                        SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_GELB.Txt", false, item,"");
+                    if (result > 0)
+                    {
+                        // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht
+                        continue;
+                    }
 
-
-                        int result = Analysis(Farbe.Rot);                                 // Gelb = -1
-                        if (result < 0)
-                        {
-                            // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht
-                        }
-
-                        // Zug wieder entfernen
-                        RemoveValue(item, Farbe.Gelb);
+                    // Kein freies Feld mehr vorhanden
+                    if (result == -1)
+                    {
+                        continue; 
                     }
 
 
-                    // Diagonal -> /
-                    //if ((item.DiagRechtsRunter + item.DiagLinksHoch) > 0)
+                    // Tiefe ist erreicht -> Züge ausgeben
+                    if (result == -10)
                     {
-                        if ((item.DiagRechtsRunter + item.DiagLinksHoch) == 3)
-                        {
-                            // Rot hat gewonen
-                            SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_GELB.Txt", false, item, "GELB hat mit dem Zug gewonnen");
-                            return -1;
-                        }
-
-                        // Zug ausführen und schauen, was er bringt
-                        SetValue(item, Farbe.Gelb);
-                        SaveBrett(@"c:\temp\4Gewinnt\Analyse_Brett_GELB.Txt", false, item,"");
-
-
-                        int result = Analysis(Farbe.Rot);                                 // Gelb = -1
-                        if (result < 0)
-                        {
-                            // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht
-                        }
-
-                        // Zug wieder entfernen
-                        RemoveValue(item, Farbe.Gelb);
+                        SaveBrett(FileNameBrett, false, item, "GELB  ... Max. Tiefe ist erreicht ...");
+                        SaveMove(FileNameZug, false, Zuege);
+                        return result;
                     }
+
                 }//foreach
             }//if
 
             return 0;
 
+        }//END
+
+
+        public static int GetFreeField()
+        {
+            int result = 0;
+
+            for (int y = 1; y <= MaxY; y++)
+            {
+                for (int x = 1; x <= MaxX; x++)
+                {
+                    if (feld[x, y] == 0)
+                        result++;
+                }
+            }
+
+            return result;
         }//END
 
 
