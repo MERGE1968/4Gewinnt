@@ -24,8 +24,9 @@ namespace Win4Gewinnt
         //public static string path = @"C:\Temp\4Gewinnt\Stellung1.txt";
 
         public static Farbe Spieler;
-        public static int step = 0;
+        //public static int step = 0;
         public static bool gewonnen = false;
+        public static int Tiefe = 0;
 
 
         public static int GetValue(int pX, int pY)   
@@ -677,18 +678,64 @@ namespace Win4Gewinnt
 
 
         //------------------------------------------
+        // Eine Liste sortieren
+        //------------------------------------------
+        private static List<Zug> Sortieren(List<Zug> pListe)
+        {
+            List<Zug> sortiert = new List<Zug>();
+            int step = 0;
+            int maxValue = 3;                       // Max. Value, die langsam nach unten reduziert wird
+            int maxCount = pListe.Count;            // Anzahl der sortierten Elemente in der Liste
+            bool finding = false;                   // TRue -> wenn Elemente mit dem gesuchten Wert vorkommen
+           
+            do
+            {
+                foreach (Zug item in pListe)
+                {
+                    // Wenn in eins der Richtung Werte existieren -> sortieren
+                    if (((item.Links + item.Rechts) >= maxValue) ||
+                        (item.Runter >= maxValue) ||
+                        ((item.DiagLinksHoch + item.DiagRechtsRunter) >= maxValue) ||
+                        ((item.DiagLinksRunter + item.DiagRechtsHoch) >= maxValue))
+                    {                        
+                        sortiert.Add(item);
+                        step++;
+                        finding = true;
+                        pListe.Remove(item);                                                        // Element entfernen
+                        break;
+                    }
+                }
+
+                // Schleife verlassen, wenn ALLE Elemente in der Liste sortiert snd
+                if (pListe.Count == 0)
+                    break;
+
+                // Wenn kein Element gefunden wurde, Max. Value um 1 reduzieren
+                if (!finding)
+                    maxValue--;
+
+                finding = false;
+
+            } while (true);
+
+
+            return sortiert;
+        }//END
+
+
+        //------------------------------------------
         // ReturnValue:
         //    0  -> Alles in Ordnung
         //   <0  -> 4 Steine in einer Reihe !!!
         //------------------------------------------
-        public static int Analysis(Farbe pSpieler)
+        public static int Analysis(Farbe pSpieler, int pTiefe)
         {
-            if (GetFreeField() == 0)
-                return -10;
+            if (GetFreeField() == false)
+                return -100;
 
-            if (step > 10000)
-                return -10;
-
+            if (pTiefe >= 6)
+                return -200;    
+            
             // Den ersten EIGENEN Stein auf dem Feld finden
             int CountEigeneSteine = GetEigenenStein(pSpieler);            
             
@@ -806,6 +853,12 @@ namespace Win4Gewinnt
                 }//for x
             }//for y
 
+            // Sortieren
+            List<Zug> Sortiert = new List<Zug>();
+            if (Zuege.Count > 0)
+            {                
+                Sortiert = Sortieren(Zuege);
+            }
 
             
             int result;
@@ -814,12 +867,9 @@ namespace Win4Gewinnt
             
             if (pSpieler == Farbe.Rot)
             {
-                // Ergebnisse in einer Datei speichern                
-                //SaveMove(FileNameZugRot, false, Zuege); ;
-
-                foreach (Zug item in Zuege)
+                foreach (Zug item in Sortiert)
                 {
-                    // Wenn eine Himmelsrichtung eine4 Reihe ergibt 
+                    // Wenn eine Himmelsrichtung eine 4 Reihe ergibt 
                     if (((item.Links + item.Rechts) >= 3) ||
                         (item.Runter >= 3) ||
                         ((item.DiagLinksHoch + item.DiagRechtsRunter) >= 3) ||
@@ -830,43 +880,36 @@ namespace Win4Gewinnt
                         SetValue(item, Farbe.Rot);
                         SaveBrett(FileNameBrett, false, item, "ROT hat mit dem Zug gewonnen");
                         RemoveValue(item, Farbe.Rot);                                           // Zug wieder entfernen
-                        SaveMove(FileNameZug, false, Zuege);
-                        step++;
-                        return -10;                                                             // Irgendwie die Routine beenden
+                        SaveMove(FileNameZug, false, Sortiert);                        
+                        return -1000;                                                             // Irgendwie die Routine beenden
                     }
-
+                    
 
                     // Zug ausführen und schauen, was er bringt
                     SetValue(item, Farbe.Rot);
                     //SaveBrett(FileNameBrett, false, item, "Zug ROT");
-                    result = Analysis(Farbe.Gelb);                                          // Gelb = -1
+                    pTiefe++;
+                    result = Analysis(Farbe.Gelb, pTiefe);                                  // GELB
+                    pTiefe--;
                     RemoveValue(item, Farbe.Rot);                                           // Zug wieder entfernen                        
 
-                    if (gewonnen)
+                    if (result == 1000)
                     {
-                        SaveBrett(FileNameBrett, false, item, "ROT  ");
-                        return -10;
+                        // GELB hat 4 Reihe !!!
+                        continue;
                     }
 
-                    if (result > 0)
+                    // Max. Tiefe ist erreicht
+                    if (result == -200)
                     {
-                        // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht                            
                         continue;
                     }
 
                     // Kein freies Feld mehr vorhanden
-                    if (result == -1)
+                    if (result == -100)
                     {
-                        continue; 
-                    }
-
-                    // Tiefe ist erreicht -> Züge ausgeben
-                    if (result == -10)
-                    {
-                        SaveBrett(FileNameBrett, false, item, "ROT  ... Max. Tiefe ist erreicht ...");
-                        SaveMove(FileNameZug, false, Zuege);
-                        return result; 
-                    }
+                        return result;                                  // Proz. verlassen
+                    }                    
 
                 }//foreach
             }//if
@@ -874,13 +917,13 @@ namespace Win4Gewinnt
 
 
 
-
+            /* */
             if (pSpieler == Farbe.Gelb)
             {
                 // Ergebnisse in einer Datei speichern
                 //SaveMove(FileNameZugGelb, false, Zuege);
 
-                foreach (Zug item in Zuege)
+                foreach (Zug item in Sortiert)
                 {
                     // Wenn eine Himmelsrichtung eine4 Reihe ergibt 
                     if (((item.Links + item.Rechts) >= 3) ||
@@ -888,57 +931,53 @@ namespace Win4Gewinnt
                         ((item.DiagLinksHoch + item.DiagRechtsRunter) >= 3) ||
                         ((item.DiagLinksRunter + item.DiagRechtsHoch) >= 3))
                     {
-                        // Gelb hat gewonen
-                        //SetValue(item, Farbe.Gelb);
-                        //SaveBrett(FileNameBrett, false, item, "GELB hat mit dem Zug gewonnen");
-                        //RemoveValue(item, Farbe.Gelb);                                          // Zug wieder entfernen
-                        //step++;
-                        return 1;
+                        // Gelb hat gewonen                        
+                        return 1000;                                                                // GELB -> Positive Zahlen
                     }
 
 
                     // Zug ausführen und schauen, was er bringt
                     SetValue(item, Farbe.Gelb);
                     //SaveBrett(FileNameBrett, false, item, "Zug GELB");
-                    result = Analysis(Farbe.Rot);                                           // Gelb = -1
-                    RemoveValue(item, Farbe.Gelb);                                          // Zug wieder entfernen
+                    pTiefe++;
+                    result = Analysis(Farbe.Rot, pTiefe);                                           // ROT
+                    pTiefe--;
+                    RemoveValue(item, Farbe.Gelb);                                                  // Zug wieder entfernen                    
 
-                    if (gewonnen)
+                    if (result == -1000)
                     {
-                        SaveBrett(FileNameBrett, false, item, "GELB  ");
-                        return -10;
+                        // ROT hat 4 Reihe !!!
+                        continue;
                     }
 
-                    if (result > 0)
+                    // Max. Tiefe ist erreicht
+                    if (result == -200)
                     {
-                        // Den Zug auf keinem Fall ausführen, weil der GEGNER sofort einen 4 Reiher macht
                         continue;
                     }
 
                     // Kein freies Feld mehr vorhanden
-                    if (result == -1)
+                    if (result == -100)
                     {
-                        continue; 
-                    }
-
-
-                    // Tiefe ist erreicht -> Züge ausgeben
-                    if (result == -10)
-                    {
-                        SaveBrett(FileNameBrett, false, item, "GELB  ... Max. Tiefe ist erreicht ...");
-                        SaveMove(FileNameZug, false, Zuege);
-                        return result;
+                        return result;                                  // Proz. verlassen
                     }
 
                 }//foreach
             }//if
+            /* */
+
 
             return 0;
 
         }//END
 
 
-        public static int GetFreeField()
+        //-----------------------------------------------
+        // Return:
+        //    TRUE  -> Freie felder vorhanden
+        //    FALSE -> Alles felder belegt
+        //-----------------------------------------------
+        public static bool GetFreeField()
         {
             int result = 0;
 
@@ -951,7 +990,7 @@ namespace Win4Gewinnt
                 }
             }
 
-            return result;
+            return (result > 0);            // TRUE, wenn freie felder vorhanden sind
         }//END
 
 

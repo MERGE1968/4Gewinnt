@@ -68,14 +68,20 @@ namespace Win4Gewinnt
 
         private void BtnAnalysis_Click(object sender, EventArgs e)
         {
+            int result = 0;
             Brett.gewonnen = false;
+            Brett.Tiefe = 0;
 
             if (rbRot.Checked)
-                Brett.Analysis(Brett.Farbe.Rot);                                    // Rot = 1
+                result = Brett.Analysis(Brett.Farbe.Rot, Brett.Tiefe);                                    // Rot = 1
             else
-                Brett.Analysis(Brett.Farbe.Gelb);                                   // Gelb = -1
+                result = Brett.Analysis(Brett.Farbe.Gelb, Brett.Tiefe);                                   // Gelb = -1
 
-            int anzahl = Brett.step;
+            if (result == -1000)
+            {
+                MessageBox.Show("ROT hat gewonnen");
+            }
+            
             MessageBox.Show("... FERTIG ...");
         }
 
