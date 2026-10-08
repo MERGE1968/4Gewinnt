@@ -23,9 +23,12 @@ namespace Win4Gewinnt
         //public static List<Zug> Zuege = new List<Zug>();
         //public static string path = @"C:\Temp\4Gewinnt\Stellung1.txt";
 
+        private static string FileNameBrett = @"c:\temp\4Gewinnt\Analyse_BRETT.Txt";
+        private static string FileNameZug = @"c:\temp\4Gewinnt\Analyse_ZUG.Txt";
+
         public static Farbe Spieler;
         //public static int step = 0;
-        public static bool gewonnen = false;
+        //public static bool gewonnen = false;
         public static int Tiefe = 0;
 
 
@@ -684,8 +687,7 @@ namespace Win4Gewinnt
         {
             List<Zug> sortiert = new List<Zug>();
             int step = 0;
-            int maxValue = 3;                       // Max. Value, die langsam nach unten reduziert wird
-            int maxCount = pListe.Count;            // Anzahl der sortierten Elemente in der Liste
+            int maxValue = 3;                       // Max. Value, die langsam nach unten reduziert wird            
             bool finding = false;                   // TRue -> wenn Elemente mit dem gesuchten Wert vorkommen
            
             do
@@ -723,54 +725,14 @@ namespace Win4Gewinnt
         }//END
 
 
-        //------------------------------------------
-        // ReturnValue:
-        //    0  -> Alles in Ordnung
-        //   <0  -> 4 Steine in einer Reihe !!!
-        //------------------------------------------
-        public static int Analysis(Farbe pSpieler, int pTiefe)
+
+        //---------------------------------------------------------
+        // 20260813:
+        //    Alle möglichen Züge für die gesuchte FARBE ermitteln
+        //---------------------------------------------------------
+        private static List<Zug> GetAllMoves(Farbe pSpieler)
         {
-            if (GetFreeField() == false)
-                return -100;
-
-            if (pTiefe >= 6)
-                return -200;    
-            
-            // Den ersten EIGENEN Stein auf dem Feld finden
-            int CountEigeneSteine = GetEigenenStein(pSpieler);            
-            
-
-            // Wenn kein Stein auf dem Feld liegt -> so nah wie möglich beim Gegner platzieren
-            if (CountEigeneSteine == 0)
-            {
-                // Den ersten Stein vom GEGNERs auf dem Feld finden
-                Farbe gegner;
-                if (pSpieler == Farbe.Rot)                                      // Rot = 1
-                    gegner = Farbe.Gelb;                                        // Gelb = -1
-                else
-                    gegner = Farbe.Rot;
-
-                int CountGegnerSteine = GetGegnerStein(gegner);
-
-                if (CountGegnerSteine == 0)
-                {
-                    // Kein Stein vom Gegner vorhanden.
-                    // Eigenes Stein mittig platzieren und Proz. verlassen
-                    SetValue(4, 1, pSpieler);                 
-                }
-                else
-                {
-                    // So nah wie möglich am Stein vom Gegner platzieren
-                    // Links vom Gegner-Stein platzieren
-                    SetFirstStein(pSpieler);
-                }
-
-                return 0;
-            }
-
-
             List<Zug> Zuege = new List<Zug>();
-
 
             // Wir haben auf dem Feld Steine und suchen jetzt nach einem freien Feld.
             // Wir gehen Feld für Feld durch und schauen, ob es zusammenhängende Steine gibt.
@@ -796,7 +758,7 @@ namespace Win4Gewinnt
 
                     // Grundlinie 
                     if (y == 1)
-                    {                        
+                    {
                         if (GetValue(x, y) == 0)
                         {
                             ZugMoglich = true;
@@ -807,13 +769,13 @@ namespace Win4Gewinnt
                             searchRechts = SearchRechts(pSpieler, x, y);
                             searchLinks = SearchLinks(pSpieler, x, y);
                             searchDiagLinksHoch = SearchDiagLinksHoch(pSpieler, x, y);
-                            gesamt = searchDiagRechtsHoch + searchRechts + searchLinks + searchDiagLinksHoch;                            
+                            gesamt = searchDiagRechtsHoch + searchRechts + searchLinks + searchDiagLinksHoch;
                         }
                     }
 
 
                     // Über der Grundlinie 
-                    if ((y > 1) && (Math.Abs(GetValue(x,y-1)) > 0))
+                    if ((y > 1) && (Math.Abs(GetValue(x, y - 1)) > 0))
                     {
                         if (GetValue(x, y) == 0)
                         {
@@ -825,7 +787,7 @@ namespace Win4Gewinnt
                             searchDiagLinksRunter = SearchDiagLinksRunter(pSpieler, x, y);
                             searchLinks = SearchLinks(pSpieler, x, y);
                             searchDiagLinksHoch = SearchDiagLinksHoch(pSpieler, x, y);
-                            gesamt = searchDiagRechtsHoch + searchRechts + searchDiagRechtsRunter + searchRunter + searchDiagLinksRunter + searchLinks + searchDiagLinksHoch;                            
+                            gesamt = searchDiagRechtsHoch + searchRechts + searchDiagRechtsRunter + searchRunter + searchDiagLinksRunter + searchLinks + searchDiagLinksHoch;
                         }
                     }
 
@@ -853,18 +815,86 @@ namespace Win4Gewinnt
                 }//for x
             }//for y
 
-            // Sortieren
-            List<Zug> Sortiert = new List<Zug>();
-            if (Zuege.Count > 0)
-            {                
-                Sortiert = Sortieren(Zuege);
+            return Zuege;
+        }//END
+
+
+
+        //------------------------------------------
+        // ReturnValue:
+        //       0  : Ersten Stein platziert
+        //      -50 : keine züge möglich
+        //    -100  : Kein freies Feld mehr vorhanden
+        //    -200  : Max. Tiefe ist erreicht
+        //   -1000  : GELB hat 4 Reihe geschafft
+        //    1000  : ROT hat 4 Reihe geschafft
+        //------------------------------------------
+        public static int Analysis(Farbe pSpieler, int pTiefe)
+        {
+            // Freie Felder suchen
+            if (!GetFreeField())
+                return -100;
+
+            // Max. Tiefe erreicht
+            if (pTiefe >= 6)
+                return -200;
+
+
+            //-----------------------------------------------------------
+            // Den ersten EIGENEN Stein auf dem Feld finden
+            //
+            int CountEigeneSteine = GetEigenenStein(pSpieler);
+
+
+            // Wenn kein Stein auf dem Feld liegt -> so nah wie möglich beim Gegner platzieren
+            if (CountEigeneSteine == 0)
+            {
+                // Den ersten Stein vom GEGNERs auf dem Feld finden
+                int CountGegnerSteine;
+                if (pSpieler == Farbe.Rot)                                    // Rot = 1
+                    CountGegnerSteine = GetGegnerStein(Farbe.Gelb);           // Gelb = -1
+                else
+                    CountGegnerSteine = GetGegnerStein(Farbe.Rot);
+
+                if (CountGegnerSteine == 0)
+                {
+                    // Kein Stein vom Gegner vorhanden.
+                    // Eigenes Stein mittig platzieren und Proz. verlassen
+                    SetValue(4, 1, pSpieler);
+                }
+                else
+                {
+                    // So nah wie möglich am Stein vom Gegner platzieren
+                    // Links vom Gegner-Stein platzieren
+                    SetFirstStein(pSpieler);
+                }
+
+                return 0;
             }
+            //-----------------------------------------------------------
+
+
+
+            //
+            // Alle möglichen Züge für die Farbe ermitteln
+            //
+            List<Zug> Zuege = GetAllMoves(pSpieler);
+            if (Zuege.Count == 0)
+                return -50;
 
             
-            int result;
-            string FileNameBrett = @"c:\temp\4Gewinnt\Analyse_BRETT.Txt";            
-            string FileNameZug = @"c:\temp\4Gewinnt\Analyse_ZUG.Txt";
+            //
+            // Liste sortieren
+            //
+            List<Zug> Sortiert = new List<Zug>();
+            Sortiert = Sortieren(Zuege);
             
+            int result=0;            
+            
+
+            //----------------------------------------------------------
+            //  ROT
+            //
             if (pSpieler == Farbe.Rot)
             {
                 foreach (Zug item in Sortiert)
@@ -875,49 +905,57 @@ namespace Win4Gewinnt
                         ((item.DiagLinksHoch + item.DiagRechtsRunter) >= 3) ||
                         ((item.DiagLinksRunter + item.DiagRechtsHoch) >= 3))
                     {
-                        // Rot hat gewonen
-                        gewonnen = true;
+                        // Rot hat gewonen                        
                         SetValue(item, Farbe.Rot);
                         SaveBrett(FileNameBrett, false, item, "ROT hat mit dem Zug gewonnen");
-                        RemoveValue(item, Farbe.Rot);                                           // Zug wieder entfernen
-                        SaveMove(FileNameZug, false, Sortiert);                        
-                        return -1000;                                                             // Irgendwie die Routine beenden
+                        RemoveValue(item, Farbe.Rot);                                            // Zug wieder entfernen
+                        SaveMove(FileNameZug, false, Sortiert);
+                        item.Gesamt += 1000;
+                        return item.Gesamt;                                                      // Irgendwie die Routine beenden
                     }
                     
 
+                    //
                     // Zug ausführen und schauen, was er bringt
-                    SetValue(item, Farbe.Rot);
-                    //SaveBrett(FileNameBrett, false, item, "Zug ROT");
+                    //
+                    SetValue(item, Farbe.Rot);                   
                     pTiefe++;
                     result = Analysis(Farbe.Gelb, pTiefe);                                  // GELB
                     pTiefe--;
                     RemoveValue(item, Farbe.Rot);                                           // Zug wieder entfernen                        
 
-                    if (result == 1000)
+
+                    if (result == -1000)
                     {
                         // GELB hat 4 Reihe !!!
-                        continue;
+                        item.Gesamt += result;
+                        continue;                                                           // Diesen Zug auf keinen Fall ausführen
                     }
 
                     // Max. Tiefe ist erreicht
                     if (result == -200)
                     {
-                        continue;
+                        continue; 
                     }
 
                     // Kein freies Feld mehr vorhanden
                     if (result == -100)
                     {
-                        return result;                                  // Proz. verlassen
+                        continue;                                                      
                     }                    
 
                 }//foreach
+
+                return result;
             }//if
+            //----------------------------------------------------------
 
 
 
 
-            /* */
+            //----------------------------------------------------------
+            //   GELB
+            //
             if (pSpieler == Farbe.Gelb)
             {
                 // Ergebnisse in einer Datei speichern
@@ -932,22 +970,25 @@ namespace Win4Gewinnt
                         ((item.DiagLinksRunter + item.DiagRechtsHoch) >= 3))
                     {
                         // Gelb hat gewonen                        
-                        return 1000;                                                                // GELB -> Positive Zahlen
+                        return -1000;                                                                // GELB -> Positive Zahlen
                     }
 
 
+                    //
                     // Zug ausführen und schauen, was er bringt
-                    SetValue(item, Farbe.Gelb);
-                    //SaveBrett(FileNameBrett, false, item, "Zug GELB");
+                    //
+                    SetValue(item, Farbe.Gelb);                    
                     pTiefe++;
                     result = Analysis(Farbe.Rot, pTiefe);                                           // ROT
                     pTiefe--;
                     RemoveValue(item, Farbe.Gelb);                                                  // Zug wieder entfernen                    
 
-                    if (result == -1000)
+
+                    if (result == 1000)
                     {
                         // ROT hat 4 Reihe !!!
-                        continue;
+                        item.Gesamt += result;
+                        continue;                                                                   // Diesen Zug auf keinen Fall ausführen
                     }
 
                     // Max. Tiefe ist erreicht
@@ -959,13 +1000,14 @@ namespace Win4Gewinnt
                     // Kein freies Feld mehr vorhanden
                     if (result == -100)
                     {
-                        return result;                                  // Proz. verlassen
+                        continue;                                  
                     }
 
                 }//foreach
-            }//if
-            /* */
 
+                return result;
+            }//if
+            //----------------------------------------------------------           
 
             return 0;
 

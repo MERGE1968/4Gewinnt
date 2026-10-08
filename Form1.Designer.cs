@@ -41,6 +41,8 @@ namespace Win4Gewinnt
             this.rbRot = new System.Windows.Forms.RadioButton();
             this.label3 = new System.Windows.Forms.Label();
             this.textBoxFileName = new System.Windows.Forms.TextBox();
+            this.btnRechnen = new System.Windows.Forms.Button();
+            this.btnWetten = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -165,11 +167,34 @@ namespace Win4Gewinnt
             this.textBoxFileName.TabIndex = 11;
             this.textBoxFileName.Text = "C:\\Temp\\4Gewinnt\\Stellung1.txt";
             // 
+            // btnRechnen
+            // 
+            this.btnRechnen.Location = new System.Drawing.Point(393, 105);
+            this.btnRechnen.Name = "btnRechnen";
+            this.btnRechnen.Size = new System.Drawing.Size(75, 23);
+            this.btnRechnen.TabIndex = 12;
+            this.btnRechnen.Text = "Rechnen";
+            this.btnRechnen.UseVisualStyleBackColor = true;
+            this.btnRechnen.Click += new System.EventHandler(this.btnRechnen_Click);
+            // 
+            // btnWetten
+            // 
+            this.btnWetten.Location = new System.Drawing.Point(395, 134);
+            this.btnWetten.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.btnWetten.Name = "btnWetten";
+            this.btnWetten.Size = new System.Drawing.Size(73, 31);
+            this.btnWetten.TabIndex = 13;
+            this.btnWetten.Text = "Wetten";
+            this.btnWetten.UseVisualStyleBackColor = true;
+            this.btnWetten.Click += new System.EventHandler(this.btnWetten_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(480, 177);
+            this.Controls.Add(this.btnWetten);
+            this.Controls.Add(this.btnRechnen);
             this.Controls.Add(this.textBoxFileName);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.groupBox1);
@@ -205,6 +230,8 @@ namespace Win4Gewinnt
         private System.Windows.Forms.RadioButton rbRot;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textBoxFileName;
+        private System.Windows.Forms.Button btnRechnen;
+        private System.Windows.Forms.Button btnWetten;
     }
 }
 
